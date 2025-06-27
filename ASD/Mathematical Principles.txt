@@ -1,0 +1,69 @@
+Explanation of Mathematical Principles in the Code
+
+1. Absolute Difference Calculation for Module Data
+
+For each module (e.g., a biological indicator or feature), the code calculates "difference metrics" for each target species. The principle is:
+
+(1) Assume for a given module, there is a recorded value for all samples, and the target species has a value x_target for this module.
+
+(2) For all other samples, the difference with the target species is expressed as the absolute value:
+    |x - x_target|
+
+Using absolute values eliminates the sign, focusing only on the magnitude of the difference.
+
+2. Calculation of Mean and Variance
+
+For each module and each target species, the code calculates the following two metrics:
+
+A. Mean:  
+   For a given module, the mean of absolute differences for all samples except the target species. Assuming there are n other samples with absolute differences d₁, d₂, ..., dₙ, the mean μ is:
+   μ = (d₁ + d₂ + … + dₙ) / n
+
+B. Variance:  
+   The variance of these absolute difference values, reflecting the dispersion of the data. The mathematical expression is:
+   σ² = (1/(n-1)) * Σ(dᵢ - μ)²     (i=1,...,n)
+   Note: The code uses numpy's var function which calculates population variance by default; typically, dividing by n-1 provides an unbiased estimate, but here the focus is on describing dispersion.
+
+Thus, for each module and target species, two statistics are obtained: average difference (measuring central tendency) and variance of differences (measuring dispersion).
+
+3. Construction of Module Feature Vectors
+
+For each module, the means and variances for all target species are concatenated to form a feature vector.  
+Assuming there are k target species, each module corresponds to a vector of length 2k:
+   (μ₁, σ²₁, μ₂, σ²₂, …, μₖ, σ²ₖ)
+
+This step aggregates the difference information across different target species, providing multidimensional data for subsequent calculations.
+
+4. Data Standardization
+
+Due to potential differences in scale or magnitude between the means and variances of different modules, direct comparison may be unreasonable. Therefore, standardization is used, specifically Z-score standardization.  
+The standardization process formula is:
+   z = (x - μ_column) / σ_column
+Where:
+   x: the value of a module for a particular feature (e.g., mean difference for a target species)  
+   μ_column: the mean of this feature across all modules  
+   σ_column: the standard deviation of this feature across all modules
+
+After this transformation, each feature is converted to a standard normal distribution with mean 0 and standard deviation 1, facilitating comparison and summation across different metrics.
+
+5. Calculation and Sorting of Combined Metrics
+
+After standardization, for each module's feature vector, the code sums all standardized metrics to obtain a "combined difference score."  
+Mathematically, for module i with feature vector z_i = (z_{i,1}, z_{i,2}, …, z_{i,2k}), the combined score is:
+   Score_i = Σ (z_{i,j})    j=1,2,…,2k
+
+This sum effectively "weights and integrates" various metrics.  
+- If a module is far from the average level across multiple metrics (i.e., has large absolute standardized values), its combined score is high.  
+- Sorting is done in descending order, with higher scores indicating that the module is more "anomalous" or "distinctive" in the target species compared to other samples.
+
+Finally, based on this combined score, all modules are ranked, and the top n modules with the highest scores are selected as the final output.
+
+6. Summary
+
+The mathematical core of the process can be summarized as:  
+1. Using absolute differences to calculate numerical differences between samples and target species across various modules;  
+2. Calculating average differences and variability of differences (mean and variance) for each module;  
+3. Standardizing these statistics to eliminate scale differences;  
+4. Summing to obtain a score that reflects the overall distinctiveness of each module, and ranking modules based on this score.
+
+This method leverages statistical principles of mean, variance, and standardization to ensure that different metrics can be compared on the same scale, ultimately selecting the most distinctive modules that may be more representative of the target species.
